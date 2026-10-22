@@ -1,0 +1,112 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidTask(data) {
+      return data.userId is string && data.userId.size() <= 128 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 200 &&
+             data.priority in ['urgent', 'high', 'medium', 'low'] &&
+             data.isCompleted is bool &&
+             (!('category' in data) || (data.category is string && data.category.size() <= 50)) &&
+             (!('dueDate' in data) || (data.dueDate is string && data.dueDate.size() <= 50)) &&
+             (!('updatedAt' in data) || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidSchedule(data) {
+      return data.userId is string && data.userId.size() <= 128 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 200 &&
+             data.startTime is string && data.startTime.size() >= 1 && data.startTime.size() <= 50 &&
+             data.date is string && data.date.size() >= 1 && data.date.size() <= 50 &&
+             data.priority in ['urgent', 'high', 'medium', 'low'] &&
+             data.isCompleted is bool &&
+             (!('description' in data) || (data.description is string && data.description.size() <= 500)) &&
+             (!('endTime' in data) || (data.endTime is string && data.endTime.size() <= 50)) &&
+             (!('updatedAt' in data) || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidHistory(data) {
+      return data.userId is string && data.userId.size() <= 128 &&
+             data.commandText is string && data.commandText.size() <= 500 &&
+             data.responseText is string && data.responseText.size() <= 2000 &&
+             data.language in ['hi', 'en'] &&
+             data.actionType is string && data.actionType.size() <= 50;
+    }
+
+    match /users/{userId} {
+      allow get: if isSignedIn() && request.auth.uid == userId;
+
+      match /tasks/{taskId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         incoming().userId == userId &&
+                         isValidTask(incoming()) &&
+                         incoming().createdAt is timestamp &&
+                         incoming().createdAt <= request.time &&
+                         incoming().keys().hasAll(['userId', 'title', 'priority', 'isCompleted', 'createdAt']) &&
+                         incoming().keys().hasOnly(['userId', 'title', 'priority', 'category', 'dueDate', 'isCompleted', 'createdAt', 'updatedAt']);
+        allow update: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         incoming().userId == userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidTask(incoming()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['title', 'priority', 'category', 'dueDate', 'isCompleted', 'updatedAt']);
+        allow delete: if isSignedIn() && request.auth.uid == userId;
+      }
+
+      match /schedules/{scheduleId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         incoming().userId == userId &&
+                         isValidSchedule(incoming()) &&
+                         incoming().createdAt is timestamp &&
+                         incoming().createdAt <= request.time &&
+                         incoming().keys().hasAll(['userId', 'title', 'startTime', 'date', 'priority', 'isCompleted', 'createdAt']) &&
+                         incoming().keys().hasOnly(['userId', 'title', 'description', 'startTime', 'endTime', 'date', 'priority', 'isCompleted', 'createdAt', 'updatedAt']);
+        allow update: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         incoming().userId == userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidSchedule(incoming()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['title', 'description', 'startTime', 'endTime', 'date', 'priority', 'isCompleted', 'updatedAt']);
+        allow delete: if isSignedIn() && request.auth.uid == userId;
+      }
+
+      match /history/{historyId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         incoming().userId == userId &&
+                         isValidHistory(incoming()) &&
+                         incoming().createdAt is timestamp &&
+                         incoming().createdAt <= request.time &&
+                         incoming().keys().hasAll(['userId', 'commandText', 'responseText', 'language', 'actionType', 'createdAt']) &&
+                         incoming().keys().hasOnly(['userId', 'commandText', 'responseText', 'language', 'actionType', 'createdAt']);
+        allow delete: if isSignedIn() && request.auth.uid == userId;
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "Jarvis",
+  "description": "AI Assistant that organizes daily schedule, prioritizes urgent tasks, opens apps, makes calls, and reads messages in Hindi and English.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

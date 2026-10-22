@@ -1,0 +1,146 @@
+{
+  "entities": {
+    "TaskItem": {
+      "title": "TaskItem",
+      "description": "An urgent or prioritized daily task",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner user ID"
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the task"
+        },
+        "priority": {
+          "type": "string",
+          "description": "Priority level: urgent, high, medium, low",
+          "enum": ["urgent", "high", "medium", "low"]
+        },
+        "category": {
+          "type": "string",
+          "description": "Category: urgent, work, personal, call, reminder"
+        },
+        "dueDate": {
+          "type": "string",
+          "description": "Optional due date or time string"
+        },
+        "isCompleted": {
+          "type": "boolean",
+          "description": "Whether the task is finished"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp. Submitted as FieldValue.serverTimestamp()"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Update timestamp. Submitted as FieldValue.serverTimestamp()"
+        }
+      },
+      "required": ["userId", "title", "priority", "isCompleted", "createdAt"]
+    },
+    "ScheduleItem": {
+      "title": "ScheduleItem",
+      "description": "A scheduled event, meeting, or time block",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner user ID"
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the schedule item"
+        },
+        "description": {
+          "type": "string",
+          "description": "Details or notes"
+        },
+        "startTime": {
+          "type": "string",
+          "description": "Start time string (e.g. 10:00 AM)"
+        },
+        "endTime": {
+          "type": "string",
+          "description": "End time string (e.g. 11:30 AM)"
+        },
+        "date": {
+          "type": "string",
+          "description": "Date (e.g. 2026-10-22)"
+        },
+        "priority": {
+          "type": "string",
+          "description": "Priority: urgent, high, medium, low",
+          "enum": ["urgent", "high", "medium", "low"]
+        },
+        "isCompleted": {
+          "type": "boolean",
+          "description": "Whether the schedule block is completed"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp. Submitted as FieldValue.serverTimestamp()"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Update timestamp. Submitted as FieldValue.serverTimestamp()"
+        }
+      },
+      "required": ["userId", "title", "startTime", "date", "priority", "isCompleted", "createdAt"]
+    },
+    "HistoryItem": {
+      "title": "HistoryItem",
+      "description": "Voice command and assistant response log",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner user ID"
+        },
+        "commandText": {
+          "type": "string",
+          "description": "The command spoken or typed by the user"
+        },
+        "responseText": {
+          "type": "string",
+          "description": "Jarvis assistant reply"
+        },
+        "language": {
+          "type": "string",
+          "description": "Language: hi or en",
+          "enum": ["hi", "en"]
+        },
+        "actionType": {
+          "type": "string",
+          "description": "Type of action performed: open_app, make_call, add_task, organize_schedule, read_message, chat"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp. Submitted as FieldValue.serverTimestamp()"
+        }
+      },
+      "required": ["userId", "commandText", "responseText", "language", "actionType", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/tasks/{taskId}": {
+      "schema": { "$ref": "#/entities/TaskItem" },
+      "description": "Prioritized tasks and to-dos for user"
+    },
+    "/users/{userId}/schedules/{scheduleId}": {
+      "schema": { "$ref": "#/entities/ScheduleItem" },
+      "description": "Daily schedule agenda items and timeblocks"
+    },
+    "/users/{userId}/history/{historyId}": {
+      "schema": { "$ref": "#/entities/HistoryItem" },
+      "description": "Recent voice and text interactions with Jarvis"
+    }
+  }
+}
